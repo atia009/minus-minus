@@ -1,9 +1,9 @@
 //
-//  support.cpp
-//  MinusMinusV3
+// support.cpp
+// MinusMinusV3
 //
-//  Created by Tony Biehl on 2/13/21.
-//  Copyright © 2021 Tony Biehl. All rights reserved.
+// Created by Tony Biehl on 2/13/21.
+// Copyright © 2021 Tony Biehl. All rights reserved.
 //
 
 #include "support.hpp"
@@ -35,7 +35,7 @@ int calculate(Program &p, Stack<string>& postFix, SymbolTable& local, bool& succ
         else // yes, get single operand value
             result = convertOperand(p, s, local, success);
     }
-    else{ // regular equation
+    else { // regular equation
         if (postFix.getStackSize() == 0) { // no operand?
             p.errorMsg("Missing operand");
             return 0;
@@ -100,6 +100,7 @@ bool compareBool(Program &p, SymbolTable& local){
     if (!success)
         p.errorMsg("Invalid second operand of compare");
     success = false;
+
     if (compareOp == "=")
         success = (val1 == val2);
     else if (compareOp == "<")
@@ -128,8 +129,7 @@ int convertOperand(Program &p, string& s, SymbolTable& table, bool& success){
     int result = 0;
     Symbol sym;
     bool unaryMinus = false;
-    if (s.length() > 0)
-    {
+    if (s.length() > 0) {
         if (s[0] == '+') // unary plus
             s = s.substr(1); // remove the unary plus
         else if (s[0] == '-') { // unary minus
@@ -181,7 +181,7 @@ int convertOperand(Program &p, string& s, SymbolTable& table, bool& success){
                     p.push(p.getLineNumber()); // put return address on stack
                     int numParms = p.countArguments(table, s); // count and put args onto stack
                     execute(p, t, sym.getOffset(), numParms); // do the function with new symbol table
-                    
+
                     p.setLineNumber(p.peek()); // set the return address
                     p.pop(1); // remove return address
                     result = p.peek(); // get the return value
@@ -199,18 +199,18 @@ int convertOperand(Program &p, string& s, SymbolTable& table, bool& success){
 
 /** execute
  Will take the Program object p with the addition of:
-   1. A local SymbolTable
-   2. Where to start in the MinusMinus code (lineStart)
-   3. The number of parmeters (numParms)
-      Note: the values of the arguments are on the
-            p object's stack and the local SymbolTable
-            will link up the parameter name with the
-            stack offset
+ 1. A local SymbolTable
+ 2. Where to start in the MinusMinus code (lineStart)
+ 3. The number of parmeters (numParms)
+ Note: the values of the arguments are on the
+ p object's stack and the local SymbolTable
+ will link up the parameter name with the
+ stack offset
  Sets up needed variables and even has a whiles stack
-    for use with keeping track of the top of current while
+ for use with keeping track of the top of current while
  Will do a loop with a switch statement for executing
-    MinusMinus instrucions until either the boolean run
-    is false or an error occurs
+ MinusMinus instrucions until either the boolean run
+ is false or an error occurs
  */
 void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
     Symbol lookup; // for looking up from SymbolTable
@@ -240,7 +240,7 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             if (p.isValidID(token)){
                 if (!p.addParmOffset(token, numParms - temp, local))
                     p.errorMsg(
-                        "No room on stack");
+                               "No room on stack");
                 numLocals++;
             }
             p -= COMMA; // get past comma
@@ -249,68 +249,144 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
     }
     while (run && p.getErrorCount() == 0) {
         //cout << "at line " << p.getLineNumber()+1 << endl;
-     // switch (++p) // now to start executing function/procedure code
+        // switch (++p) // now to start executing function/procedure code
         ++p; // point to next command, xyz(a)
         Commands cmd;
         cmd *= p; // ASSIGN
         /*
-        ; dommmendndjkh;lfjdj
-         
-        */
+         ; dommmendndjkh;lfjdj
+
+         */
         switch (cmd)
         {
-        case ASSIGN:
- // fill in the code
-            break;
-        case CALL:
- // fill in the code
-            break;
-        case COMMENT:
-        case BLANK:
-            break;
-        case DECLARE:
- // fill in the code
-            break;
-        case ENDIF:
-// fill in the code
-            break;
-        case ENDPROGRAM: // ran out of code
-            run = false;
-            return; // exit
-        case ENDWHILE:
-// fill in the code
-            break;
-        case FUNCTION:
-        case PROCEDURE:
-// fill in the code
-            return; // exit
-        case IF:
-// fill in the code
-            break;
-        case INPUT:
- // fill in the code
-              break;
-        case PRINT:
-              print = true;
-        case PRINTLN:
- // fill in the code
-              if (!print)
-                  cout << endl;
-              print = false;
-              break;
-        case RETURN:
-// fill in the code
-              return;
-        case UNKNOWN:
-              token *= p;
-              if (token != "")
-                  p.errorMsg("Bad command");
-              break;
-        case WHILE:
-// fill in the code
-              break;
+            case ASSIGN:
+                variable *= p;
+                p -= CMD;
+                token *= p;
+                p -= EQUATION;
+                token *= p;
+                temp = parseEquation(p, token, local, success);
+                p.poke(variable, temp, local);
+                break;
+            case CALL:
+                // fill in the code
+                break;
+            case COMMENT:
+            case BLANK:
+                break;
+            case DECLARE:
+                token *= p;
+                p -= COMMA;
+                token *= p;
+
+                while (!token.empty()) {
+                    if (token != "," and p.isValidID(token)){
+                        p.push(token, local);
+                    }
+                    p -= COMMA;
+                    token *= p;
+                }
+
+                break;
+            case ENDIF:
+                if (numIfs > 0) {
+                    numIfs -= 1;
+                }
+                break;
+            case ENDPROGRAM: // ran out of code
+                run = false;
+                return; // exit
+            case ENDWHILE:
+                if (numWhiles > 0) {
+                    numWhiles -= 1;
+                }
+                p = whiles.peek();
+                whiles.pop();
+                break;
+            case FUNCTION:
+            case PROCEDURE:
+                // fill in the code
+                return; // exit
+            case IF:
+                if (compareBool(p, local)) {
+                    numIfs += 1;
+                } else {
+                    token *= p;
+                    while (token != "endif") {
+                        ++p;
+                        token *= p;
+                    }
+                }
+                break;
+            case INPUT:
+                p -= COMMA;
+                token *= p;
+                if (token[0] == '"') {
+                    p.trim(QUOTE, token);
+                    cout << token << endl;
+                    p -= TOKEN;
+                    token *= p;
+                    if (token == ",") {
+                        p -= TOKEN;
+                        token *= p;
+                        lookup=Symbol(token,0,NONE);
+                        if (local.get(lookup)) {
+                            cin >> temp;
+                            p.poke(token, temp, local);
+                        } else {
+                            p.errorMsg("cannot find variable");
+                        }
+                    } else {
+                        p.errorMsg("Missing comma");
+                    }
+                }
+                break;
+            case PRINT:
+                print = true;
+            case PRINTLN:
+                p -= COMMA;
+                token *= p;
+                while (!token.empty()) {
+                    if (token != ","){
+                        if (token[0] == '"') {
+                            cout << token << endl;
+                        } else {
+                            temp = parseEquation(p, token, local, success);
+                            cout << temp << endl;
+                        }
+                    }
+                    p -= COMMA;
+                    token *= p;
+                }
+                if (!print)
+                    cout << endl;
+                print = false;
+                break;
+            case RETURN:
+                // fill in the code
+                token *= p;
+                cout << "in return " << p.peek() << endl;
+                return;
+            case UNKNOWN:
+                token *= p;
+                if (token != "")
+                    p.errorMsg("Bad command");
+                break;
+            case WHILE:
+                if (compareBool(p, local)) {
+                    numWhiles += 1;
+                    whiles.push(p.getLineNumber() - 1);
+                }
+                else {
+                    token *= p;
+                    while (token != "endwhile") {
+                        ++p;
+                        token *= p;
+                    }
+                }
+                break;
+        }
     }
-  }
 }
 
 /*
@@ -352,41 +428,67 @@ int parseEquation(Program &p, string exp, SymbolTable& local, bool& success){
     int oldLineNumber = p.getLineNumber();
     int temp;
     string s = p.nextFactor(exp), op, operand1;
- // fill in the code
+    std::locale loc;
+    while (!s.empty()) {
+        if (isdigit(s[0]) or isalpha(s[0], loc) or s[0] == FUNCTION_ARG) {
+            postFix.push(s);
+            s = p.nextFactor(exp);
+        } else if (s == "(") {
+            operatorStack.push(s);
+            s = p.nextFactor(exp);
+        } else if (p.isOperator(s)) {
+            while (operatorStack.getStackSize() > 0 and operatorStack.peek() != "(" and p.precedence(operatorStack.peek())) {
+                postFix.push(operatorStack.peek());
+                operatorStack.pop();
+            }
+            operatorStack.push(s);
+            s = p.nextFactor(exp);
+        } else if (s == ")") {
+            while (operatorStack.peek() != "(") {
+                postFix.push(operatorStack.peek());
+                operatorStack.pop();
+            }
+            operatorStack.pop();
+            s = p.nextFactor(exp);
+        }
+    }
+    while (operatorStack.getStackSize() > 0) {
+        postFix.push(operatorStack.peek());
+        operatorStack.pop();
+    }
+    // fill in the code
     /*
      while s is not blank
      {
-        if first character isalpha or isdigit or checkFirstChar(s, FUNCTION_ARG)
-          push s onto postFix
-        else if s is "("
-          push s onto operatorStack
-        else if isOperator(s)
-          while !operatorStack.isEmpty and operatorStack.peek is not a ‘(’ and
-                     precedence(s <= precedence(operatorStack.peek()))
-          {
-               push operatorStack.peek() to postFix
-               operatorStack.pop()
-          }
-          operatorStack.push(s)
-        else if s is ")"
-          while (operatorStack.peek() is not a ‘(’)
-          {
-               push operatorStack.peek() to postFix
-               operatorStack.pop()
-          }
-          operatorStack.pop()     // remove open
-       } end while
-       while (!operatorStack.isEmpty())
-       {
-           push operatorStack.peek() to postFix
-           operatorStack.pop()
-       }
-     
+     if first character isalpha or isdigit or checkFirstChar(s, FUNCTION_ARG)
+     push s onto postFix
+     else if s is "("
+     push s onto operatorStack
+     else if isOperator(s)
+     while !operatorStack.isEmpty and operatorStack.peek is not a ‘(’ and
+     precedence(s <= precedence(operatorStack.peek()))
+     {
+     push operatorStack.peek() to postFix
+     operatorStack.pop()
+     }
+     operatorStack.push(s)
+     else if s is ")"
+     while (operatorStack.peek() is not a ‘(’)
+     {
+     push operatorStack.peek() to postFix
+     operatorStack.pop()
+     }
+     operatorStack.pop() // remove open
+     } end while
+     while (!operatorStack.isEmpty())
+     {
+     push operatorStack.peek() to postFix
+     operatorStack.pop()
+     }
+
      */
     temp = calculate(p, postFix, local, success);
     p.setLineNumber(oldLineNumber);
     return temp;
 } // end parseEquation
-
-
 
