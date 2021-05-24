@@ -255,7 +255,6 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
         cmd *= p; // ASSIGN
         /*
         ; dommmendndjkh;lfjdj
-         
         */
         switch (cmd)
         {
@@ -269,7 +268,25 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             p.poke(variable, temp, local);
             break;
         case CALL:
- // fill in the code
+            method *= p; // get procedure
+            cout << "Method name is " << method << endl;
+            lookup = Symbol(method, 0, PROC);
+            if (!p.getMethod(lookup))
+            {
+                method = "Procedure " + method + " not found";
+                p.errorMsg(method);
+            }
+            else 
+            {
+                SymbolTable localVar; // local var tab for recursive execute function
+                cout << "in call pushing line number " << p.getLineNumber() << endl;
+                cout << numLocals << endl;
+                p.push(p.getLineNumber()); // push return address onto stack
+                p -= EQUATION;
+                token *= p; // get arguments
+                temp = p.countArguments(local, token); // set temp to how many parameters there
+                execute(p, localVar, lookup.getOffset(), temp);
+            }
             break;
         case COMMENT:
         case BLANK:
