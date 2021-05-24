@@ -405,7 +405,21 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
                   p.errorMsg("Bad command");
               break;
         case WHILE:
-// fill in the code
+                if (compareBool(p, local)) 
+                {
+                    numWhiles += 1;
+                    whiles.push(p.getLineNumber() - 1);
+                }
+                else 
+                {
+                    token *= p;
+                    while (token != "endwhile") 
+                    {
+                        ++p;
+                        token *= p;
+                    }
+                }
+                break;
               break;
     }
   }
