@@ -313,7 +313,12 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             run = false;
             return; // exit
         case ENDWHILE:
-// fill in the code
+            if (numWhiles > 0) 
+            {
+                numWhiles -= 1;
+            }
+            p = whiles.peek();
+            whiles.pop();
             break;
         case FUNCTION:
         case PROCEDURE:
