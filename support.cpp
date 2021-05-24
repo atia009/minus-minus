@@ -260,7 +260,13 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
         switch (cmd)
         {
         case ASSIGN:
- // fill in the code
+            variable *= p;
+            p -= CMD;
+            token *= p;
+            p -= EQUATION;
+            token *= p;
+            temp = parseEquation(p, token, local, success);
+            p.poke(variable, temp, local);
             break;
         case CALL:
  // fill in the code
