@@ -292,7 +292,19 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
         case BLANK:
             break;
         case DECLARE:
- // fill in the code
+            token *= p;
+            p -= COMMA;
+            token *= p;
+            while (!token.empty()) 
+            {
+                if (token != "," and p.isValidID(token))
+                {
+                    p.push(token, local);
+                    numLocals++; // increment number of locals on stack
+                }
+                p -= COMMA;
+                token *= p;
+            }
             break;
         case ENDIF:
 // fill in the code
