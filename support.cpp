@@ -255,21 +255,56 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
         cmd *= p; // ASSIGN
         /*
         ; dommmendndjkh;lfjdj
-         
         */
         switch (cmd)
         {
         case ASSIGN:
- // fill in the code
+            variable *= p;
+            p -= CMD;
+            token *= p;
+            p -= EQUATION;
+            token *= p;
+            temp = parseEquation(p, token, local, success);
+            p.poke(variable, temp, local);
             break;
         case CALL:
- // fill in the code
+            method *= p; // get procedure
+            cout << "Method name is " << method << endl;
+            lookup = Symbol(method, 0, PROC);
+            if (!p.getMethod(lookup))
+            {
+                method = "Procedure " + method + " not found";
+                p.errorMsg(method);
+            }
+            else 
+            {
+                SymbolTable localVar; // local var tab for recursive execute function
+                cout << "in call pushing line number " << p.getLineNumber() << endl;
+                cout << numLocals << endl;
+                p.push(p.getLineNumber()); // push return address onto stack
+                p -= EQUATION;
+                token *= p; // get arguments
+                temp = p.countArguments(local, token); // set temp to how many parameters there
+                execute(p, localVar, lookup.getOffset(), temp);
+            }
             break;
         case COMMENT:
         case BLANK:
             break;
         case DECLARE:
- // fill in the code
+            token *= p;
+            p -= COMMA;
+            token *= p;
+            while (!token.empty()) 
+            {
+                if (token != "," and p.isValidID(token))
+                {
+                    p.push(token, local);
+                    numLocals++; // increment number of locals on stack
+                }
+                p -= COMMA;
+                token *= p;
+            }
             break;
         case ENDIF:
 // fill in the code
@@ -278,26 +313,89 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             run = false;
             return; // exit
         case ENDWHILE:
-// fill in the code
+            if (numWhiles > 0) 
+            {
+                numWhiles -= 1;
+            }
+            p = whiles.peek();
+            whiles.pop();
             break;
         case FUNCTION:
         case PROCEDURE:
-// fill in the code
+            p.pop(numLocals);
             return; // exit
         case IF:
-// fill in the code
+            if (compareBool(p, local)) 
+            {
+                numIfs += 1;
+            } 
+            else 
+            {
+                token *= p;
+                while (token != "endif") 
+                {
+                    ++p;
+                    token *= p;
+                }
+            }
             break;
         case INPUT:
- // fill in the code
-              break;
+             p -= COMMA;
+            token *= p;
+            if (token[0] == '"') 
+            {
+                p.trim(QUOTE, token); // take off quotes
+                cout << token << endl;
+                p -= TOKEN;
+                token *= p;
+                if (token == ",") 
+                {
+                    p -= TOKEN;
+                    token *= p;
+                    lookup=Symbol(token,0,NONE);
+                    if (local.get(lookup)) 
+                    {
+                        cin >> temp;
+                        p.poke(token, temp, local);
+                    } 
+                    else 
+                    {
+                        p.errorMsg("cannot find variable");
+                    }
+                } 
+                else 
+                {
+                    p.errorMsg("Missing comma");
+                }
+            }
+            break;
         case PRINT:
               print = true;
         case PRINTLN:
- // fill in the code
-              if (!print)
-                  cout << endl;
-              print = false;
-              break;
+            p -= COMMA;
+            token *= p;
+            while (!token.empty()) 
+            {
+                if (token != ",")
+                {
+                    if (token[0] == '"') 
+                    {
+                        p.trim(QUOTE, token);
+                        cout << token;
+                    } 
+                    else 
+                    {
+                        temp = parseEquation(p, token, local, success);
+                        cout << temp;
+                    }
+                }
+                p -= COMMA;
+                token *= p;
+            }
+            if (!print)
+                cout << endl; 
+            print = false;
+            break;
         case RETURN:
 // fill in the code
               return;
@@ -307,7 +405,21 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
                   p.errorMsg("Bad command");
               break;
         case WHILE:
-// fill in the code
+                if (compareBool(p, local)) 
+                {
+                    numWhiles += 1;
+                    whiles.push(p.getLineNumber() - 1);
+                }
+                else 
+                {
+                    token *= p;
+                    while (token != "endwhile") 
+                    {
+                        ++p;
+                        token *= p;
+                    }
+                }
+                break;
               break;
     }
   }
