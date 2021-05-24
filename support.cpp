@@ -340,8 +340,35 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             }
             break;
         case INPUT:
- // fill in the code
-              break;
+             p -= COMMA;
+            token *= p;
+            if (token[0] == '"') 
+            {
+                p.trim(QUOTE, token); // take off quotes
+                cout << token << endl;
+                p -= TOKEN;
+                token *= p;
+                if (token == ",") 
+                {
+                    p -= TOKEN;
+                    token *= p;
+                    lookup=Symbol(token,0,NONE);
+                    if (local.get(lookup)) 
+                    {
+                        cin >> temp;
+                        p.poke(token, temp, local);
+                    } 
+                    else 
+                    {
+                        p.errorMsg("cannot find variable");
+                    }
+                } 
+                else 
+                {
+                    p.errorMsg("Missing comma");
+                }
+            }
+            break;
         case PRINT:
               print = true;
         case PRINTLN:
