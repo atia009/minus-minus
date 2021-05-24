@@ -325,7 +325,19 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             p.pop(numLocals);
             return; // exit
         case IF:
-// fill in the code
+            if (compareBool(p, local)) 
+            {
+                numIfs += 1;
+            } 
+            else 
+            {
+                token *= p;
+                while (token != "endif") 
+                {
+                    ++p;
+                    token *= p;
+                }
+            }
             break;
         case INPUT:
  // fill in the code
