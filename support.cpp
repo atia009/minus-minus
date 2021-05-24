@@ -372,11 +372,30 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
         case PRINT:
               print = true;
         case PRINTLN:
- // fill in the code
-              if (!print)
-                  cout << endl;
-              print = false;
-              break;
+            p -= COMMA;
+            token *= p;
+            while (!token.empty()) 
+            {
+                if (token != ",")
+                {
+                    if (token[0] == '"') 
+                    {
+                        p.trim(QUOTE, token);
+                        cout << token;
+                    } 
+                    else 
+                    {
+                        temp = parseEquation(p, token, local, success);
+                        cout << temp;
+                    }
+                }
+                p -= COMMA;
+                token *= p;
+            }
+            if (!print)
+                cout << endl; 
+            print = false;
+            break;
         case RETURN:
 // fill in the code
               return;
