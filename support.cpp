@@ -322,7 +322,7 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             break;
         case FUNCTION:
         case PROCEDURE:
-// fill in the code
+            p.pop(numLocals);
             return; // exit
         case IF:
 // fill in the code
