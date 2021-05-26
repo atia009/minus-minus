@@ -397,8 +397,32 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             print = false;
             break;
         case RETURN:
-// fill in the code
-              return;
+          token *= p; // token here is "return"
+
+          p -= EQUATION;
+          token *= p;
+          val = 0;
+
+          if (codeMethod == PROCEDURE) {
+              if (token != "") {
+                  p.errorMsg("invalid return for procedure");
+                  return;
+              }
+          } else {
+              val = parseEquation(p, token, local, success);
+          }
+
+          p.pop(numLocals);
+          p.setLineNumber(p.peek());
+
+          if (codeMethod == FUNCTION) {
+              temp = p.peek();
+              p.pop(2);
+              p.push(val);
+              p.push(temp);
+          }
+
+          return;
         case UNKNOWN:
               token *= p;
               if (token != "")
@@ -464,37 +488,32 @@ int parseEquation(Program &p, string exp, SymbolTable& local, bool& success){
     int oldLineNumber = p.getLineNumber();
     int temp;
     string s = p.nextFactor(exp), op, operand1;
- // fill in the code
-    /*
-     while s is not blank
-     {
-        if first character isalpha or isdigit or checkFirstChar(s, FUNCTION_ARG)
-          push s onto postFix
-        else if s is "("
-          push s onto operatorStack
-        else if isOperator(s)
-          while !operatorStack.isEmpty and operatorStack.peek is not a ‘(’ and
-                     precedence(s <= precedence(operatorStack.peek()))
-          {
-               push operatorStack.peek() to postFix
-               operatorStack.pop()
-          }
-          operatorStack.push(s)
-        else if s is ")"
-          while (operatorStack.peek() is not a ‘(’)
-          {
-               push operatorStack.peek() to postFix
-               operatorStack.pop()
-          }
-          operatorStack.pop()     // remove open
-       } end while
-       while (!operatorStack.isEmpty())
-       {
-           push operatorStack.peek() to postFix
-           operatorStack.pop()
-       }
-     
-     */
+    std::locale loc;
+    while (!s.empty()) {
+        if (isdigit(s[0]) or isalpha(s[0], loc) or checkFirstChar(s, FUNCTION_ARG)) {
+            postFix.push(s);
+        } else if (s == "(") {
+            operatorStack.push(s);
+        } else if (p.isOperator(s)) {
+            while (operatorStack.getStackSize() > 0 and operatorStack.peek() != "(" and p.precedence(s) <= p.precedence(operatorStack.peek())) {
+                postFix.push(operatorStack.peek());
+                operatorStack.pop();
+            }
+            operatorStack.push(s);
+        } else if (s == ")") {
+            while (operatorStack.peek() != "(") {
+                postFix.push(operatorStack.peek());
+                operatorStack.pop();
+            }
+            operatorStack.pop();
+        }
+        s = p.nextFactor(exp);
+    }
+    while (operatorStack.getStackSize() > 0) {
+        postFix.push(operatorStack.peek());
+        operatorStack.pop();
+    }
+
     temp = calculate(p, postFix, local, success);
     p.setLineNumber(oldLineNumber);
     return temp;
