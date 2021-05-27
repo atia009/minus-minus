@@ -58,7 +58,7 @@ int calculate(Program &p, Stack<string>& postFix, SymbolTable& local, bool& succ
             postFix.pop(); // remove operand
             result = convertOperand(p, operand1, local, success);
         }
-        //cout << "operator " << s << " operand1 " << operand1 << " operand2 " << operand2 << endl;
+        // cout << "operator " << s << " operand1 " << operand1 << " operand2 " << operand2 << endl;
         //cout << "Values " << result << " " << result2 << endl;
         switch (s[0]) // do operation
         {
@@ -269,7 +269,7 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             break;
         case CALL:
             method *= p; // get procedure
-            cout << "Method name is " << method << endl;
+            // cout << "Method name is " << method << endl;
             lookup = Symbol(method, 0, PROC);
             if (!p.getMethod(lookup))
             {
@@ -279,8 +279,8 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             else 
             {
                 SymbolTable localVar; // local var tab for recursive execute function
-                cout << "in call pushing line number " << p.getLineNumber() << endl;
-                cout << numLocals << endl;
+                // cout << "in call pushing line number " << p.getLineNumber() << endl;
+                // cout << numLocals << endl;
                 p.push(p.getLineNumber()); // push return address onto stack
                 p -= EQUATION;
                 token *= p; // get arguments
@@ -488,36 +488,68 @@ int parseEquation(Program &p, string exp, SymbolTable& local, bool& success){
     int oldLineNumber = p.getLineNumber();
     int temp;
     string s = p.nextFactor(exp), op, operand1;
-    std::locale loc;
-    while (!s.empty()) {
-        if (isdigit(s[0]) or isalpha(s[0], loc) or checkFirstChar(s, FUNCTION_ARG)) {
+    while (s != "")
+    {
+        // cout << "token is " << s << endl;
+        if (isdigit(s[0]) || isalpha(s[0]) || checkFirstChar(s, FUNCTION_ARG))
+        {
             postFix.push(s);
-        } else if (s == "(") {
+        }
+        else if (s == "(")
+        {
             operatorStack.push(s);
-        } else if (p.isOperator(s)) {
-            while (operatorStack.getStackSize() > 0 and operatorStack.peek() != "(" and p.precedence(s) <= p.precedence(operatorStack.peek())) {
-                postFix.push(operatorStack.peek());
-                operatorStack.pop();
-            }
-            operatorStack.push(s);
-        } else if (s == ")") {
-            while (operatorStack.peek() != "(") {
+        }
+        else if (s == ")")
+        {
+            while (operatorStack.peek() != "(")
+            {
                 postFix.push(operatorStack.peek());
                 operatorStack.pop();
             }
             operatorStack.pop();
         }
+        else if (p.isOperator(s))
+        {
+            if (p.isOperator(s) && (s == "-" || s == "+") && leadMinus)
+            {
+                // cout << s << "is an operator and s is a leading minus" << endl;
+                s += p.nextFactor(exp);
+                // cout << "next token is " << s << endl;
+                postFix.push(s);
+            }
+            else 
+            {
+                operatorStack.push(s);
+            }
+        }
+        else
+        {
+            while (operatorStack.getStackSize() > 0 && operatorStack.peek() != "(" && p.precedence(s) <= p.precedence(operatorStack.peek()))
+            {
+                postFix.push(operatorStack.peek());
+                operatorStack.pop();
+            }
+        }
+        leadMinus = false;
         s = p.nextFactor(exp);
     }
-    while (operatorStack.getStackSize() > 0) {
+
+    while (operatorStack.getStackSize() > 0)
+    {
         postFix.push(operatorStack.peek());
         operatorStack.pop();
     }
 
+    // bool offsetState = true;
+    // int count = -1;
+
+    // while (offsetState)
+    // { 
+    //     count++;
+    //     cout << "Top of postfix stack is " << postFix.peek(count, offsetState) << endl;
+    // }
+    // cout << "calling calculate" << endl;
     temp = calculate(p, postFix, local, success);
     p.setLineNumber(oldLineNumber);
     return temp;
 } // end parseEquation
-
-
-
