@@ -348,24 +348,28 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
                 cout << token << endl;
                 p -= TOKEN;
                 token *= p;
-                if (token == ",") 
-                {
-                    p -= TOKEN;
-                    token *= p;
-                    lookup=Symbol(token,0,NONE);
-                    if (local.get(lookup)) 
+                while (token != "") {
+                    if (token == ",")
                     {
-                        cin >> temp;
-                        p.poke(token, temp, local);
-                    } 
-                    else 
-                    {
-                        p.errorMsg("cannot find variable");
+                        p -= COMMA;
+                        token *= p;
+                        lookup=Symbol(token,0,NONE);
+                        if (local.get(lookup))
+                        {
+                            cin >> temp;
+                            p.poke(token, temp, local);
+                            p -= TOKEN;
+                            token *= p;
+                        }
+                        else
+                        {
+                            p.errorMsg("cannot find variable");
+                        }
                     }
-                } 
-                else 
-                {
-                    p.errorMsg("Missing comma");
+                    else
+                    {
+                        p.errorMsg("Missing comma");
+                    }
                 }
             }
             break;
