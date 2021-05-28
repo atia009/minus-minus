@@ -307,7 +307,10 @@ void execute(Program &p, SymbolTable &local, int lineStart, int numParms){
             }
             break;
         case ENDIF:
-// fill in the code
+            if (numIfs > 0)
+            {
+                numIfs -= 1;
+            }
             break;
         case ENDPROGRAM: // ran out of code
             run = false;
